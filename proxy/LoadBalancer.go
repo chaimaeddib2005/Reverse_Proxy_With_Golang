@@ -9,5 +9,3 @@ type LoadBalancer interface {
 	SetBackendStatus(uri *url.URL, alive bool)
 
 }
-
-
