@@ -1,11 +1,11 @@
-## Tasks:
-# Done
+# Tasks:
+## Done
  ✓ Define data structures (Backend, ServerPool, ProxyConfig)
 
  ✓ Implement LoadBalancer interface and ServerPool methods
  
  ✓ Create configuration loading logic
-# To Do
+## To Do
  
  ✓ Build basic proxy handler with request forwarding
 
@@ -21,7 +21,7 @@
  
  ✓ Test with multiple backend servers
 
-## Temporary project structure
+# Temporary project structure
 
         project/
         ├── main.go                # Entry point, orchestration
