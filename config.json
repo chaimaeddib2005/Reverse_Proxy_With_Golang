@@ -1,0 +1,13 @@
+{
+    "port": 8080,
+    "admin_port": 8081,
+    "strategy": "round-robin",
+    "health_check_frequency":"30s",
+    "backend_tmeout":"10s",
+    "backends":[
+        "http :// localhost :8082",
+        " http :// localhost :8083" ,
+        " http :// localhost :8084"
+
+    ]
+}

@@ -28,6 +28,7 @@
         │   └── config.go          # Configuration loading
         ├── proxy/
         │   ├── handler.go         # HTTP handler logic
+            ├──LoadBalencer.go     # Load-balancer abstract inteface
         │   ├── pool.go            # ServerPool implementation
         │   └── backend.go         # Backend struct and methods
         ├── health/
