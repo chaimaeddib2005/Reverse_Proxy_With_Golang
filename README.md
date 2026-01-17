@@ -19,3 +19,19 @@
  ✓ Implement error handling and logging
  
  ✓ Test with multiple backend servers
+
+## Temporary project structure
+
+        project/
+        ├── main.go                # Entry point, orchestration
+        ├── config/
+        │   └── config.go          # Configuration loading
+        ├── proxy/
+        │   ├── handler.go         # HTTP handler logic
+        │   ├── pool.go            # ServerPool implementation
+        │   └── backend.go         # Backend struct and methods
+        ├── health/
+        │   └── checker.go         # Health checking logic
+        ├── admin/
+        │   └── api.go             # Admin API handlers
+        └── config.json            # Configuration file
