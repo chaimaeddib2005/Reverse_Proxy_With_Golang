@@ -11,7 +11,7 @@ type ServerPool struct {
 
 Backends []*Backend `json:"backends"`
 Current uint64 `json:"current"` // Used for Round-Robin
-mux sync.RWMutex
+Mux sync.RWMutex
 
 }
 
@@ -21,8 +21,8 @@ func (p *ServerPool) GetNextValidPeer() *Backend {
     next := atomic.AddUint64(&p.Current, 1)
 
     
-    p.mux.RLock()
-    defer p.mux.RUnlock()
+    p.Mux.RLock()
+    defer p.Mux.RUnlock()
 
     if len(p.Backends) == 0 {
         return nil
@@ -48,9 +48,9 @@ func (p *ServerPool) GetNextValidPeer() *Backend {
 
 
 func (p *ServerPool) AddBackend(backend *Backend){
-	p.mux.Lock()
+	p.Mux.Lock()
 	p.Backends = append(p.Backends, backend)
-	p.mux.Unlock()
+	p.Mux.Unlock()
 
 }
 

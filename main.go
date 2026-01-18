@@ -12,12 +12,13 @@ import (
 	"reverseproxy.com/config"
 	"reverseproxy.com/health"
 	"reverseproxy.com/proxy"
+	"reverseproxy.com/admin"
 )
 
 func main(){
 	configuration ,err := config.LoadConfiguration()
 	if err != nil{
-		fmt.Println(err)
+		log.Fatalf("Configuration error: %v", err)
 	}
 	pool := proxy.ServerPool{}
 	back := proxy.Backend{}
@@ -40,6 +41,14 @@ func main(){
 	defer cancel()
 
 	healthChecker := health.NewHealthChecker(&pool,configuration.HealthCheckFreq,configuration.Backend_timeout,configuration.HealthCheckMethod)
+	adminAPI := admin.NewAdminAPI(&pool)
+	adminMux := http.NewServeMux()
+	adminAPI.SetUpRoutes(adminMux)
+	
+	adminServer := &http.Server{
+		Addr:    ":8081",
+		Handler: adminMux,
+	}
 
 	go healthChecker.Start(ctx)
 
@@ -50,11 +59,16 @@ func main(){
         Addr:    ":8080",
         Handler: nil,
     }
-
-	waitForShutdown(ctx, cancel, server)
+	go func() {
+		log.Println("Admin API listening on :8081")
+		if err := adminServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Admin server error: %v", err)
+		}
+	}()
+	waitForShutdown(ctx, cancel, server,adminServer)
 }
 
-func waitForShutdown(ctx context.Context, cancel context.CancelFunc, server *http.Server){
+func waitForShutdown(ctx context.Context, cancel context.CancelFunc, server *http.Server,adminServer *http.Server){
 
 	sigChan := make(chan os.Signal,1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
@@ -65,10 +79,12 @@ func waitForShutdown(ctx context.Context, cancel context.CancelFunc, server *htt
     defer shutdownCancel()
     
     if err := server.Shutdown(shutdownCtx); err != nil {
-        log.Printf("Server shutdown error: %v", err)
-    }
+        log.Printf(" Proxy Server shutdown error: %v", err)
+    }else if err := adminServer.Shutdown(shutdownCtx); err != nil{
+		 log.Printf(" Admin Server shutdown error: %v", err)
+	}
     
-    log.Println("Server stopped gracefully")
+    log.Println("Servers stopped gracefully")
 
 
 }

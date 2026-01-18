@@ -13,11 +13,11 @@
  
  ✓ Implement health checker goroutine
 
-## To Do
- 
  ✓ Create Admin API endpoints
  
  ✓ Add graceful shutdown handling
+
+## To Do
  
  ✓ Implement error handling and logging
  
