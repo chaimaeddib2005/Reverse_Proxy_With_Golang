@@ -15,6 +15,7 @@ type ProxyConfig struct {
 	Admin_port int `json:"admin_port"`
 	Strategy string `json:"strategy"` // e.g., "round-robin" or "least-conn"
 	HealthCheckFreq time.Duration  `json:"health_check_frequency"`
+	HealthCheckMethod string `json:"health_check_method"`
 	Backend_timeout time.Duration `json:"backend_timeout"`
 	BackendsUrls []*url.URL `json:"backends"`
     
@@ -32,6 +33,7 @@ func LoadConfiguration() (p ProxyConfig,err error){
 		Admin_port int `json:"admin_port"`
 		Strategy string `json:"strategy"` // e.g., "round-robin" or "least-conn"
 		HealthCheckFreq string  `json:"health_check_frequency"`
+		HealthCheckMethod string `json:"health_check_method"`
 		Backend_timeout string `json:"backend_timeout"`
 		BackendsUrls [] string `json:"backends"`
 
@@ -63,7 +65,7 @@ func LoadConfiguration() (p ProxyConfig,err error){
 			}
 			p.BackendsUrls = append(p.BackendsUrls,parsed)
 		}
-
+		p.HealthCheckMethod = configuration.HealthCheckMethod
 		return p,nil
 
 	}

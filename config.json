@@ -3,6 +3,7 @@
     "admin_port": 8081,
     "strategy": "round-robin",
     "health_check_frequency":"30s",
+    "health_check_method": "tcp",
     "backend_timeout":"10s",
     "backends":[
         "http://localhost:8082",
