@@ -143,5 +143,3 @@
         ```bash
         go run .
         ```
-
-        Expected output:
