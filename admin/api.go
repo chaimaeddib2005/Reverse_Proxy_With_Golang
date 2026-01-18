@@ -104,7 +104,7 @@ func (a *AdminAPI) handleAddBackend(w http.ResponseWriter,r *http.Request){
 		http.Error(w,"Invalid URL", http.StatusBadRequest)
 	 }
 
-	 a.mux.RUnlock()
+	 
 	 newBackend := proxy.Backend{
 		URL:          parsedURL,
         Alive:        true,

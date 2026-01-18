@@ -21,12 +21,9 @@ func main(){
 		log.Fatalf("Configuration error: %v", err)
 	}
 	pool := proxy.ServerPool{}
-	back := proxy.Backend{}
+	
 	
 	for _,Url := range(configuration.BackendsUrls){
-		back.URL = Url
-		back.SetAlive(true)
-		back.CurrentConns = 0
 		pool.Backends = append(pool.Backends, &proxy.Backend{URL:Url,Alive: true,CurrentConns:  0})
 	}
 
@@ -46,9 +43,10 @@ func main(){
 	adminAPI.SetUpRoutes(adminMux)
 	
 	adminServer := &http.Server{
-		Addr:    ":8081",
+		Addr:    ":",
 		Handler: adminMux,
 	}
+	adminServer.Addr = fmt.Sprintf(":%d",configuration.Admin_port)
 
 	go healthChecker.Start(ctx)
 
@@ -60,7 +58,7 @@ func main(){
         Handler: nil,
     }
 	go func() {
-		log.Println("Admin API listening on :8081")
+		log.Println("Admin API listening on ",adminServer.Addr)
 		if err := adminServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Admin server error: %v", err)
 		}
