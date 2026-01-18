@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	
-
+	"net/http"
+	"log"
 	"reverseproxy.com/config"
 	"reverseproxy.com/proxy"
 )
@@ -25,15 +25,11 @@ func main(){
 
 	fmt.Println("The numder of backend servers is: ",len(pool.Backends))
 	
-	//handler := proxy.ProxyHandler(&pool)
-	for range(100){
-		go func(){
-			b1 := pool.GetNextValidPeer()
-			fmt.Println(b1.URL.String())
-			}()
-	}
-	
+	fmt.Println("Proxy server starting on :8080")
 
+	http.HandleFunc("/", proxy.ProxyHandler(&pool,configuration.Backend_timeout ))
+	
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
 
 }

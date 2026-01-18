@@ -5,11 +5,13 @@
  ✓ Implement LoadBalancer interface and ServerPool methods
  
  ✓ Create configuration loading logic
-## To Do
- 
+
+
  ✓ Build basic proxy handler with request forwarding
 
  ✓ Add connection counting with atomic operations
+ 
+## To Do
  
  ✓ Implement health checker goroutine
  

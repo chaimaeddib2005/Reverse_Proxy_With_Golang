@@ -1,14 +1,20 @@
 package proxy
 
-import "net/http"
+import (
+	"context"
+	"log"
+	"net/http"
+	"net/http/httputil"
+	"time"
+)
 
-func ProxyHandler(pool LoadBalancer) http.HandlerFunc{
+func ProxyHandler(pool LoadBalancer, timeout time.Duration) http.HandlerFunc{
 
 	return func(w http.ResponseWriter,r * http.Request){
 		backend := pool.GetNextValidPeer()
 
 		if backend == nil{
-			http.Error(w, "Service unavailable",503)
+			http.Error(w, "503 Service unavailable",http.StatusServiceUnavailable)
 			return
 		}
 
@@ -16,6 +22,19 @@ func ProxyHandler(pool LoadBalancer) http.HandlerFunc{
 
 		defer backend.DecrementConnections()
 
-		w.Write([]byte("Forwarding to: "+backend.URL.String()))
+		proxy := httputil.NewSingleHostReverseProxy(backend.URL)
+
+		ctx, cancel := context.WithTimeout(r.Context(),timeout)
+
+		defer cancel()
+		r = r.WithContext(ctx)
+
+		proxy.ErrorHandler =  func(w http.ResponseWriter, r *http.Request,err error){
+			log.Println("Backend ", backend.URL.String()," failed: ",err)
+			backend.SetAlive(false)
+			http.Error(w, "502 Bad Gateway",http.StatusBadGateway)
+		}
+
+		proxy.ServeHTTP(w,r)
 	}
 }
