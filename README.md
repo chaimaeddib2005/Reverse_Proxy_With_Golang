@@ -11,9 +11,9 @@
 
  ✓ Add connection counting with atomic operations
  
-## To Do
- 
  ✓ Implement health checker goroutine
+
+## To Do
  
  ✓ Create Admin API endpoints
  
