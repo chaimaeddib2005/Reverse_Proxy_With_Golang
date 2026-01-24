@@ -21,10 +21,11 @@
         
         ✓ Test with multiple backend servers
 
-## To Do
         ✓ Implement logic to ensure a specific client (by IP or Cookie) always hits the same backend.
 
         ✓ Assign weights to backends based on their hardware capacity ($Weight_i$).
+
+## To Do
 
         ✓ Allow the proxy to serve traffic over SSL.
         
