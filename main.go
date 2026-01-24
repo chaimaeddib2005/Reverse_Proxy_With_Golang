@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,37 +24,56 @@ func main(){
 	
 	pool := &proxy.ServerPool{}
 	
-	for _, Url := range configuration.BackendsUrls {
-		pool.Backends = append(pool.Backends, &proxy.Backend{
-			URL:          Url,
+	for _, backendConfig := range configuration.BackendsConfig {
+		parsedURL, err := url.Parse(backendConfig.URL)
+		if err != nil {
+			log.Printf("Invalid backend URL %s: %v", backendConfig.URL, err)
+			continue
+		}
+		
+		weight := backendConfig.Weight
+		if weight == 0 {
+			weight = 1
+		}
+		
+		backend := &proxy.Backend{
+			URL:          parsedURL,
 			Alive:        true,
 			CurrentConns: 0,
-		})
+			Weight:       weight,
+		}
+		
+		pool.AddBackend(backend)
+		fmt.Printf("Added backend: %s (weight: %d)\n", parsedURL, weight)
 	}
 
-	fmt.Println("The number of backend servers is: ", len(pool.Backends))
-	
+	fmt.Println("The number of backend servers is:", len(pool.Backends))
 	
 	var loadBalancer proxy.LoadBalancer
 	
 	if configuration.EnableStickySessions {
-		
 		stickyTTL := configuration.StickySessionTTL
+		if stickyTTL == 0 {
+			stickyTTL = 30 * time.Minute
+		}
 		loadBalancer = proxy.NewStickySessionPool(pool, stickyTTL)
 		fmt.Println("Sticky sessions enabled with TTL:", stickyTTL)
 	} else {
 		loadBalancer = pool
-		fmt.Println("Using round-robin load balancing")
+		if configuration.Strategy == "least-conn" {
+			fmt.Println("Using least-connections load balancing")
+		} else {
+			fmt.Println("Using weighted round-robin load balancing")
+		}
 	}
 	
-	fmt.Println("Proxy server starting on :8080")
+	fmt.Printf("Proxy server starting on :%d\n", configuration.Port)
 
-	http.HandleFunc("/", proxy.ProxyHandler(loadBalancer, configuration.Backend_timeout, configuration.EnableStickySessions))
+	http.HandleFunc("/", proxy.ProxyHandler(loadBalancer, configuration.Backend_timeout, configuration.EnableStickySessions, configuration.Strategy))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	
 	healthChecker := health.NewHealthChecker(pool, configuration.HealthCheckFreq, configuration.Backend_timeout, configuration.HealthCheckMethod)
 	adminAPI := admin.NewAdminAPI(pool)
 	
@@ -68,12 +88,12 @@ func main(){
 	go healthChecker.Start(ctx)
 
 	proxyServer := &http.Server{
-		Addr:    ":8080",
-		Handler: nil, 
+		Addr:    fmt.Sprintf(":%d", configuration.Port),
+		Handler: nil,
 	}
 	
 	go func() {
-		log.Println("Proxy server listening on :8080")
+		log.Printf("Proxy server listening on :%d\n", configuration.Port)
 		if err := proxyServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Proxy server error: %v", err)
 		}
@@ -99,7 +119,6 @@ func waitForShutdown(cancel context.CancelFunc, server *http.Server, adminServer
 	
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
-	
 	
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		log.Printf("Proxy Server shutdown error: %v", err)

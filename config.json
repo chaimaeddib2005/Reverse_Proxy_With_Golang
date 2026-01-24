@@ -5,12 +5,20 @@
     "health_check_frequency":"30s",
     "health_check_method": "tcp",
     "backend_timeout":"10s",
-    "backends":[
-        "http://localhost:8082",
-        "http://localhost:8083" ,
-        "http://localhost:8084"
-
-    ],
+     "backends": [
+    {
+      "url": "http://localhost:8082",
+      "weight": 5
+    },
+    {
+      "url": "http://localhost:8083",
+      "weight": 3
+    },
+    {
+      "url": "http://localhost:8084",
+      "weight": 2
+    }
+  ],
     "enable_sticky_sessions": true,
     "sticky_session_ttl": "1h"
 }

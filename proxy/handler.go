@@ -8,12 +8,11 @@ import (
 	"time"
 )
 
-func ProxyHandler(pool LoadBalancer, timeout time.Duration, stickyEnabled bool) http.HandlerFunc {
+func ProxyHandler(pool LoadBalancer, timeout time.Duration, stickyEnabled bool, strategy string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var backend *Backend
 
 		if stickyEnabled {
-			
 			if stickyPool, ok := pool.(*StickySessionPool); ok {
 				backend = stickyPool.GetBackendForClient(r)
 			} else {
@@ -21,8 +20,11 @@ func ProxyHandler(pool LoadBalancer, timeout time.Duration, stickyEnabled bool) 
 				backend = pool.GetNextValidPeer()
 			}
 		} else {
-			
-			backend = pool.GetNextValidPeer()
+			if strategy == "least-conn" {
+				backend = pool.GetLeastConnBackend()
+			} else {
+				backend = pool.GetNextValidPeer()
+			}
 		}
 
 		if backend == nil {

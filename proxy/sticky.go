@@ -60,11 +60,12 @@ func (sp *StickySessionPool) GetBackendForClient(r *http.Request) *Backend {
     return backend
 }
 
-
-
 func (sp *StickySessionPool) GetNextValidPeer() *Backend {
-    
     return sp.pool.GetNextValidPeer()
+}
+
+func (sp *StickySessionPool) GetLeastConnBackend() *Backend {
+    return sp.pool.GetLeastConnBackend()
 }
 
 func (sp *StickySessionPool) AddBackend(backend *Backend) {
@@ -74,11 +75,10 @@ func (sp *StickySessionPool) AddBackend(backend *Backend) {
 func (sp *StickySessionPool) SetBackendStatus(uri *url.URL, alive bool) {
     sp.pool.SetBackendStatus(uri, alive)
     
-
     if !alive {
         sp.mux.Lock()
         for ip, session := range sp.sessions {
-            if session.Backend.URL == uri {
+            if session.Backend.URL.String() == uri.String() {
                 delete(sp.sessions, ip)
             }
         }
