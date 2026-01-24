@@ -70,7 +70,8 @@
                 │   ├── handler.go         # HTTP handler logic
                 │   ├──LoadBalencer.go     # Load-balancer abstract inteface
                 │   ├── pool.go            # ServerPool implementation
-                │   └── backend.go         # Backend struct and methods
+                │   ├──backend.go          # Backend struct and methods
+                |   └── sticky.go          # server pool with sticky sessions
                 ├── health/
                 │   └── checker.go         # Health checking logic
                 ├── admin/
