@@ -380,7 +380,7 @@ log.Printf("Selected backend: %s", backend.URL.String())
 
 ## License
 
-[Your License Here]
+MIT licence
 
 ## Contributing
 
