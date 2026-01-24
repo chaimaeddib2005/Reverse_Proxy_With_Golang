@@ -20,5 +20,10 @@
     }
   ],
     "enable_sticky_sessions": true,
-    "sticky_session_ttl": "1h"
+    "sticky_session_ttl": "1h",
+    "ssl": {
+    "enabled": true,
+    "cert_file": "./certs/server.crt",
+    "key_file": "./certs/server.key"
+  }
 }

@@ -15,6 +15,12 @@ type BackendConfig struct {
 	Weight int    `json:"weight"`
 }
 
+type SSLConfig struct {
+	Enabled  bool   `json:"enabled"`
+	CertFile string `json:"cert_file"`
+	KeyFile  string `json:"key_file"`
+}
+
 type ProxyConfig struct {
 	Port                 int             `json:"port"`
 	Admin_port           int             `json:"admin_port"`
@@ -25,19 +31,25 @@ type ProxyConfig struct {
 	BackendsConfig       []BackendConfig `json:"backends"`
 	EnableStickySessions bool            `json:"enable_sticky_sessions"`
 	StickySessionTTL     time.Duration   `json:"sticky_session_ttl"`
+	SSL                  SSLConfig       `json:"ssl"`
 }
 
 func LoadConfiguration() (p ProxyConfig, err error) {
 	configuration := struct {
-		Port                 int      `json:"port"`
-		Admin_port           int      `json:"admin_port"`
-		Strategy             string   `json:"strategy"`
-		HealthCheckFreq      string   `json:"health_check_frequency"`
-		HealthCheckMethod    string   `json:"health_check_method"`
-		Backend_timeout      string   `json:"backend_timeout"`
+		Port                 int             `json:"port"`
+		Admin_port           int             `json:"admin_port"`
+		Strategy             string          `json:"strategy"`
+		HealthCheckFreq      string          `json:"health_check_frequency"`
+		HealthCheckMethod    string          `json:"health_check_method"`
+		Backend_timeout      string          `json:"backend_timeout"`
 		Backends             []BackendConfig `json:"backends"`
-		EnableStickySessions bool     `json:"enable_sticky_sessions"`
-		StickySessionTTL     string   `json:"sticky_session_ttl"`
+		EnableStickySessions bool            `json:"enable_sticky_sessions"`
+		StickySessionTTL     string          `json:"sticky_session_ttl"`
+		SSL                  struct {
+			Enabled  bool   `json:"enabled"`
+			CertFile string `json:"cert_file"`
+			KeyFile  string `json:"key_file"`
+		} `json:"ssl"`
 	}{}
 
 	jsonFile, err := os.Open("config.json")
@@ -83,6 +95,10 @@ func LoadConfiguration() (p ProxyConfig, err error) {
 		return ProxyConfig{}, errors.New("error parsing sticky_session_ttl")
 	}
 
+	p.SSL.Enabled = configuration.SSL.Enabled
+	p.SSL.CertFile = configuration.SSL.CertFile
+	p.SSL.KeyFile = configuration.SSL.KeyFile
+
 	err = p.Validate()
 	if err != nil {
 		return ProxyConfig{}, err
@@ -123,6 +139,21 @@ func (p *ProxyConfig) Validate() error {
 
 	if len(p.BackendsConfig) == 0 {
 		return errors.New("at least one backend must be configured")
+	}
+
+	if p.SSL.Enabled {
+		if p.SSL.CertFile == "" {
+			return errors.New("ssl cert_file must be specified when SSL is enabled")
+		}
+		if p.SSL.KeyFile == "" {
+			return errors.New("ssl key_file must be specified when SSL is enabled")
+		}
+		if _, err := os.Stat(p.SSL.CertFile); os.IsNotExist(err) {
+			return errors.New("ssl cert_file does not exist: " + p.SSL.CertFile)
+		}
+		if _, err := os.Stat(p.SSL.KeyFile); os.IsNotExist(err) {
+			return errors.New("ssl key_file does not exist: " + p.SSL.KeyFile)
+		}
 	}
 
 	return nil
