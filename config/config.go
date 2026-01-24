@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -18,6 +19,8 @@ type ProxyConfig struct {
 	HealthCheckMethod string `json:"health_check_method"`
 	Backend_timeout time.Duration `json:"backend_timeout"`
 	BackendsUrls []*url.URL `json:"backends"`
+	EnableStickySessions  bool   `json:"enable_sticky_sessions"`
+    StickySessionTTL      time.Duration `json:"sticky_session_ttl"`
     
 	
 
@@ -36,6 +39,8 @@ func LoadConfiguration() (p ProxyConfig,err error){
 		HealthCheckMethod string `json:"health_check_method"`
 		Backend_timeout string `json:"backend_timeout"`
 		BackendsUrls [] string `json:"backends"`
+		EnableStickySessions  bool   `json:"enable_sticky_sessions"`
+		StickySessionTTL   string `json:"sticky_session_ttl"`
 
 		}{
 
@@ -49,6 +54,7 @@ func LoadConfiguration() (p ProxyConfig,err error){
 		json.Unmarshal(byteValue,&configuration)
 		p.Port = configuration.Port
 		p.Admin_port =configuration.Admin_port
+		p.Strategy = configuration.Strategy
 		p.Backend_timeout,err = time.ParseDuration(configuration.Backend_timeout)
 		if err != nil{
 			return ProxyConfig{}, errors.New("Error parsing timeout duration")
@@ -65,11 +71,18 @@ func LoadConfiguration() (p ProxyConfig,err error){
 			}
 			p.BackendsUrls = append(p.BackendsUrls,parsed)
 		}
+		
 		p.HealthCheckMethod = configuration.HealthCheckMethod
 		err = p.Validate()
 		if err != nil{
 			return ProxyConfig{}, err
 		}
+		p.EnableStickySessions = configuration.EnableStickySessions
+		p.StickySessionTTL, err = time.ParseDuration(configuration.StickySessionTTL)
+		if err != nil{
+			return ProxyConfig{}, errors.New("error parsing sticky_session_ttl")
+		}
+
 		return p,nil
 
 	}
@@ -91,6 +104,7 @@ func (p *ProxyConfig) Validate() error {
     
     // Validate strategy
     if p.Strategy != "round-robin" && p.Strategy != "least-conn" {
+		fmt.Println(p.Strategy)
         return errors.New("invalid strategy: must be 'round-robin' or 'least-conn'")
     }
     
